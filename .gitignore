@@ -1,0 +1,14 @@
+# Artefatos de build da gem
+*.gem
+
+# Bundler
+.bundle/
+vendor/bundle/
+Gemfile.lock
+
+# Ruby
+*.rbc
+.ruby-version
+
+# Sistema
+.DS_Store

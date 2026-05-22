@@ -14,6 +14,7 @@ Projetada com **arquitetura hexagonal (Ports & Adapters)**, a biblioteca mantém
   - [ConcursoHub.search](#concursoscrapersearch)
   - [ConcursoHub.edital](#concursoscraperedital)
   - [ConcursoHub.provas](#concursoscraperprovas)
+  - [ConcursoHub.download](#concursoscraperdownload)
   - [Exemplo completo em Rails](#exemplo-completo-em-rails)
 - [Uso avançado (injeção de dependências)](#uso-avançado-injeção-de-dependências)
   - [Listar concursos](#listar-concursos)
@@ -217,6 +218,36 @@ provas
 
 ---
 
+### ConcursoHub.download
+
+Busca um PDF do PCI Concursos e retorna os **bytes brutos** (`String` binária) — sem salvar nada em disco. A gem é apenas a ponte; o backend decide o que fazer com os bytes.
+
+```ruby
+# url vem de edital[:pdfs].first[:url] ou provas[0][:pdfs].first[:url]
+bytes = ConcursoHub.download(pdf_url)
+```
+
+**Casos de uso típicos em backends multi-usuário:**
+
+```ruby
+# 1. Stream direto para o cliente (Rails) — sem tocar no disco
+bytes = ConcursoHub.download(params[:pdf_url])
+send_data bytes, type: 'application/pdf', filename: 'documento.pdf', disposition: 'inline'
+
+# 2. Salvar no S3 / object storage
+bytes = ConcursoHub.download(pdf_url)
+S3.put_object(bucket: 'meu-bucket', key: "provas/#{cargo}.pdf", body: bytes)
+
+# 3. Encodar em Base64 para resposta JSON
+require 'base64'
+bytes = ConcursoHub.download(pdf_url)
+render json: { filename: 'prova.pdf', content: Base64.strict_encode64(bytes) }
+```
+
+> **Nota:** Não utilize este método para salvar arquivos em disco em ambientes multi-usuário — prefira object storage (S3, GCS) ou stream direto ao cliente. O método `download` faz sentido em disco apenas na CLI (uso local).
+
+---
+
 ### Exemplo completo em Rails
 
 **`Gemfile`**
@@ -258,14 +289,24 @@ class ConcursosController < ApplicationController
   rescue => e
     render json: { error: e.message }, status: :bad_gateway
   end
+
+  # GET /concursos/download?url=https://pciconcursos.com.br/.../edital.pdf
+  # Faz o stream do PDF direto ao cliente — sem salvar em disco
+  def download
+    bytes = ConcursoHub.download(params[:url])
+    send_data bytes, type: 'application/pdf', disposition: 'inline'
+  rescue => e
+    render json: { error: e.message }, status: :bad_gateway
+  end
 end
 ```
 
 **`config/routes.rb`**
 ```ruby
-get '/concursos',        to: 'concursos#index'
-get '/concursos/edital', to: 'concursos#edital'
-get '/concursos/provas', to: 'concursos#provas'  # ?url= é a URL do concurso
+get '/concursos',          to: 'concursos#index'
+get '/concursos/edital',   to: 'concursos#edital'
+get '/concursos/provas',   to: 'concursos#provas'    # ?url= é a URL do concurso
+get '/concursos/download', to: 'concursos#download'  # ?url= é a URL do PDF
 ```
 
 ---

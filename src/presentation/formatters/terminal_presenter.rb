@@ -15,11 +15,14 @@ module Presentation
       CYAN   = "\e[36m"
       WHITE  = "\e[97m"
 
+      attr_reader :last_concursos
+
       def show_loading
         puts "#{CYAN}Conectando ao pciconcursos.com.br…#{RESET}"
       end
 
       def show(concursos, metadata: {})
+        @last_concursos = concursos
         if concursos.empty?
           puts "\n#{RED}Nenhum concurso encontrado com os filtros informados.#{RESET}\n"
           return
@@ -141,19 +144,20 @@ module Presentation
         puts
 
         current_state = nil
-        concursos.each do |c|
+        concursos.each_with_index do |c, i|
           if c.estado != current_state
             current_state = c.estado
-            puts "\n#{BOLD}#{BLUE}▶  #{current_state}#{RESET}"
+            puts "\n#{BOLD}#{BLUE}\u25b6  #{current_state}#{RESET}"
             puts "#{DIM}#{'-' * 62}#{RESET}"
           end
-          render_entry(c)
+          render_entry(c, i + 1)
         end
       end
 
-      def render_entry(concurso)
+      def render_entry(concurso, numero = nil)
         puts
-        puts "  #{BOLD}#{WHITE}#{concurso.instituicao}#{RESET}"
+        num_prefix = numero ? "#{BOLD}#{CYAN}[#{numero}]#{RESET} " : '  '
+        puts "  #{num_prefix}#{BOLD}#{WHITE}#{concurso.instituicao}#{RESET}"
 
         vagas_line = if concurso.salario.empty?
                        concurso.vagas

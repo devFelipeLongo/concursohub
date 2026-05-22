@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'concurso_hub/version'
+
 $LOAD_PATH.unshift(File.join(__dir__, '..', 'src'))
 
 require 'application/filtros_concurso'
@@ -9,6 +11,7 @@ require 'application/use_cases/listar_concursos'
 require 'application/use_cases/ver_edital'
 require 'application/use_cases/listar_provas'
 require 'infrastructure/repositories/pci_concurso_repository'
+require 'infrastructure/http/http_file_downloader'
 
 module ConcursoHub
   def self.search(
@@ -56,6 +59,10 @@ module ConcursoHub
 
   def self.edital(url)
     fetch_edital_hash(url, build_repository)
+  end
+
+  def self.download(url)
+    Infrastructure::Http::HttpFileDownloader.new.fetch_bytes(url)
   end
 
   def self.provas(url)

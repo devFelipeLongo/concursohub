@@ -38,7 +38,9 @@ controller = Presentation::Cli::CliController.new(
   use_case:      use_case,
   ver_edital:    ver_edital,
   baixar_edital: baixar_edital,
-  baixar_provas: baixar_provas
+  baixar_provas: baixar_provas,
+  presenter:     presenter,
+  repository:    repository
 )
 
 presenter.show_loading

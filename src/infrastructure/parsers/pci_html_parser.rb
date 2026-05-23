@@ -87,7 +87,7 @@ module Infrastructure
       end
 
       def build_concurso_encerrado(el)
-        link = el.css('div.ca > a[href^="/concurso/"]').first
+        link = el.css('div.ca > a').first
         return nil unless link
 
         state = el.css('div.cc').first&.text&.strip || ''
@@ -106,7 +106,7 @@ module Infrastructure
         )
       end
       def build_concurso(el, state)
-        link = el.css('div.ca > a[href^="/concurso/"]').first
+        link = el.css('div.ca > a').first
         return nil unless link
 
         vagas, salario = parse_vagas_salario(el)

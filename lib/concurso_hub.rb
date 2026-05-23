@@ -68,8 +68,7 @@ module ConcursoHub
   def self.provas(url)
     repository = build_repository
     edital     = fetch_edital_hash(url, repository)
-
-    raise "Nenhuma prova disponível para este concurso." unless edital[:provas_url]
+    return [] unless edital[:provas_url]
 
     fetch_provas_array(edital[:provas_url], repository)
   end
